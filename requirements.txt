@@ -1,5 +1,6 @@
 streamlit
 scikit-learn
-xgboost
 nltk
 snscrape
+pandas
+numpy
