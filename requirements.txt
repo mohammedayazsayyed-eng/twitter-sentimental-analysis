@@ -4,4 +4,4 @@ nltk
 snscrape
 pandas
 numpy
-python==3.7
+python==3.13
