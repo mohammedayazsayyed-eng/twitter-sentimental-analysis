@@ -4,3 +4,4 @@ nltk
 snscrape
 pandas
 numpy
+python==3.10
