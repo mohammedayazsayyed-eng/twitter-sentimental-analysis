@@ -72,7 +72,6 @@ def create_card(tweet_text, sentiment):
 def main():
     st.set_page_config(page_title="Twitter Sentiment Analysis", page_icon="🐦", layout="centered")
     st.title("🐦 Twitter Sentiment Analysis")
-    st.write("Analyze sentiment of a tweet or fetch recent tweets from a user.")
 
     option = st.selectbox("Choose an option", ["Input text", "Get tweets from user"])
     
