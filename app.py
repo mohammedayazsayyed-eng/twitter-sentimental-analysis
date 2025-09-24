@@ -4,9 +4,11 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
-from ntscraper import Nitter
+import snscrape.modules.twitter as sntwitter  # ✅ Replaces Nitter
 
-# Download NLTK stopwords only once
+# -------------------------------
+# Download stopwords once
+# -------------------------------
 nltk.download('stopwords')
 stop_words = stopwords.words('english')
 port_stem = PorterStemmer()
@@ -25,7 +27,7 @@ def load_model_and_vectorizer():
 model, vectorizer = load_model_and_vectorizer()
 
 # -------------------------------
-# Preprocessing function (same as in Colab)
+# Preprocessing function (same as Colab)
 # -------------------------------
 def preprocess_text(text):
     text = re.sub('[^a-zA-Z]', ' ', text)
@@ -45,19 +47,24 @@ def predict_sentiment(text):
     return "Negative" if prediction[0] == 0 else "Positive"
 
 # -------------------------------
-# Nitter scraper (cached)
+# Fetch Tweets using snscrape
 # -------------------------------
-@st.cache_resource
-def initialize_scraper():
-    return Nitter(log_level=1)
-
-scraper = initialize_scraper()
+def fetch_tweets(username, limit=5):
+    tweets = []
+    try:
+        for i, tweet in enumerate(sntwitter.TwitterUserScraper(username).get_items()):
+            if i >= limit:
+                break
+            tweets.append(tweet.content)
+    except Exception as e:
+        st.error(f"Error fetching tweets: {e}")
+    return tweets
 
 # -------------------------------
 # Helper: Create HTML Card
 # -------------------------------
 def create_card(tweet_text, sentiment):
-    color = "#28a745" if sentiment == "Positive" else "#dc3545"  # Bootstrap green/red
+    color = "#28a745" if sentiment == "Positive" else "#dc3545"  # Green for positive, red for negative
     card_html = f"""
     <div style="background-color: {color}; padding: 15px; border-radius: 10px; margin: 10px 0;">
         <h5 style="color: white; margin: 0;">{sentiment} Sentiment</h5>
@@ -82,19 +89,18 @@ def main():
                 sentiment = predict_sentiment(text_input)
                 st.success(f"Sentiment: {sentiment}") if sentiment == "Positive" else st.error(f"Sentiment: {sentiment}")
             else:
-                st.warning(" Please enter some text first.")
+                st.warning("Please enter some text first.")
 
     elif option == "Get tweets from user":
         username = st.text_input("Enter Twitter username")
         if st.button("Fetch Tweets"):
-            tweets_data = scraper.get_tweets(username, mode='user', number=5)
-            if 'tweets' in tweets_data:
-                for tweet in tweets_data['tweets']:
-                    tweet_text = tweet['text']
+            tweets_data = fetch_tweets(username)
+            if tweets_data:
+                for tweet_text in tweets_data:
                     sentiment = predict_sentiment(tweet_text)
                     st.markdown(create_card(tweet_text, sentiment), unsafe_allow_html=True)
             else:
-                st.error("No tweets found or an error occurred.")
+                st.warning("No tweets found for this user.")
 
 if __name__ == "__main__":
     main()
